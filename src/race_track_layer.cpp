@@ -99,6 +99,7 @@ namespace costmap_2d{
 			geometry_msgs::Point mid = robots[i]->getMidPoint();
 			if(speed < 0.01) continue;
 			std::vector<MapLocation> raceTrack;
+			geometry_msgs::Point a, b, c;
 			MapLocation q, p, r;
 			
 			a.x = mid.x + cos(angle + 0.5) ;
