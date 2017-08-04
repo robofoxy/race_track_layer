@@ -1,0 +1,9 @@
+<class_libraries>
+
+  <library path="lib/librace_track_layer">
+    <class type="costmap_2d::RaceTrackLayer" base_class_type="costmap_2d::Layer">
+      <description>Costmap plugin that sets LETHAL_OBSTACLE areas of other robot's footprints and their race tracks.</description>
+    </class>
+  </library>
+  
+</class_libraries>
