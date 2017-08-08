@@ -23,7 +23,7 @@ to array of plugins of local costmap and global costmap just below the *obstacle
 
 * *race\_track\_layer* clears old footprint locations and creates obstacles new footprint areas.
 
-* *race\_track\_layer* detects other robot's speeds and directions, then sets inflation cost of 120 to their race tracks.
+* *race\_track\_layer* detects other robot's speeds and directions, then sets inflation cost between 240 and 40 to their race tracks.
 
 * Race tracks are triangles that start from midpoints of footprints of robots.
 
@@ -33,9 +33,16 @@ c.x = mid.x + cos(angle) * 5 ;
 c.y = mid.y + sin(angle) * 5 ;
 ```
 
-* After position of race track triangle is changed, *race\_track\_layer* clears cells whose costs are 120. Therefore, *race\_track\_layer* does not damage effects of other layers.
+Else:
+```
+c.x = mid.x + cos(angle) * speed * speed * 5;
+c.y = mid.y + sin(angle) * speed * speed * 5;
+```
 
-* In order to prevent from planner failure, race track triangle is filled with cost of 120. 
+
+* After position of race track triangle is changed, *race\_track\_layer* clears cells whose costs are under LETHAL_OBSTACLE. Therefore, *race\_track\_layer* does not damage effects of other layers.
+
+* In order to prevent from planner failure, race track triangle is filled with cost of 240 to 40. 
 
 | Range        | Collision Status   |
 | ------------- | ------------- |
@@ -45,7 +52,10 @@ c.y = mid.y + sin(angle) * 5 ;
 | 0 | free space |
 
 
+* Race tracks will be cut off if they encounter with a LETHAL_OBSTACLE cell.
+
 * The robot can make plans passing through other robot's race tracks. However, costs will be bigger near the robot because of the triangular structure of the race tracks.
 
-* http://imgur.com/a/HJC0Y
+
+* http://imgur.com/a/OZkh0
 
