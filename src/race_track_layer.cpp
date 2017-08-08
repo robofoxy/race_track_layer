@@ -28,7 +28,6 @@ namespace costmap_2d{
 		
 		sub = nh.subscribe("/"+nmspc+"/amcl_pose", 1000, &RaceTrackLayer::initSub, this);
 		robotsSet = false;
-		cost = 120;
 		rolling_window_ = Layer::layered_costmap_->isRolling();
 		current_ = true;
 		default_value_ = NO_INFORMATION;
@@ -66,6 +65,8 @@ namespace costmap_2d{
 			roboty = robot_y;
 			initSet = true;
 		}
+		
+		resetMap(0, 0, getSizeInCellsX(), getSizeInCellsY());
 		
 		if(!rolling_window_) initSet = true;
 		
@@ -143,9 +144,10 @@ namespace costmap_2d{
 				geometry_msgs::Point p;
 				p.x = robots[i]->getFootprint().polygon.points[j].x;
 				p.y = robots[i]->getFootprint().polygon.points[j].y;
+			//	std::cout << nmspc << " --- px[" << j<< "] = " << p.x << "py[" << j<< "] = " << p.y << std::endl; 
 				poly.push_back(p);
 			}
-			
+		//	std::cout << "---" << std::endl;
 			polys.push_back(poly);
 		}
 	}
@@ -168,6 +170,39 @@ namespace costmap_2d{
 		return temp;
 	}
 	
+	float findDistance(MapLocation mid, MapLocation fill){
+		float a = (mid.x - fill.x) * (mid.x - fill.x), b = (mid.y - fill.y) * (mid.y - fill.y);	
+		return sqrt(a + b);
+	}
+	
+	void sortCells(std::vector<MapLocation>& filling, MapLocation a, MapLocation b){
+		
+		MapLocation temp, mid;
+		std::cout << " A = " << a.x << ", " << a.y << " B = " << b.x << ", " << b.y << std::endl;
+		mid.x = (a.x + b.x) / 2;
+		mid.y = (a.y + b.y) / 2;
+		
+		unsigned int i = 0;
+		int size = filling.size();
+		
+		while(i < size - 1){
+			MapLocation qq, rr;
+			qq.x = 0;
+			qq.y = 0;
+			rr.x = 5;
+			rr.y = 12;
+			std::cout << " 1 - = " << findDistance(qq, rr) << " , 2 - = " << findDistance(mid, filling[i+1]) << std::endl;
+			if(findDistance(mid, filling[i]) > findDistance(mid, filling[i+1])){
+				temp = filling[i];
+				filling[i] = filling[i+1];
+				filling[i+1] = temp;
+				if(i>0) i--;
+			}
+			else i++; 
+		}
+		
+	}
+	
 
 	void RaceTrackLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i,
 		                                      int max_j){
@@ -179,7 +214,7 @@ namespace costmap_2d{
 		
 			if(!robotsSet && robots.size()==0){
 				robotsSet = true;
-				
+				ros::Duration(1.0).sleep();
 				std::vector<std::string> lv_elems;
 				char lc_delim[2];
 				lc_delim[0] = '/';
@@ -201,8 +236,7 @@ namespace costmap_2d{
 			findPolys();
 		
 			int numOfPrevRobots = polysPrev.size();
-		
-			if(rolling_window_) master_grid.updateOrigin(  robotx - master_grid.getSizeInMetersX() / 2 ,  roboty - master_grid.getSizeInMetersY() / 2);
+			
 		
 			for(int i = 0; i < numOfPrevRobots; i++){
 				if(polysPrev.size() > i && polysPrev[i].size() > 0 && polys[i][0].x == polysPrev[i][0].x) continue;
@@ -216,8 +250,7 @@ namespace costmap_2d{
 			findRaceTracks(master_grid);
 		
 			int numOfPrevTracks = rtPrev.size();
-		
-			if(rolling_window_) master_grid.updateOrigin(  robotx - master_grid.getSizeInMetersX() / 2 ,  roboty - master_grid.getSizeInMetersY() / 2);
+
 		
 			for(int i = 0; i < numOfPrevTracks; i++){
 				std::vector<MapLocation> filling;
@@ -225,24 +258,32 @@ namespace costmap_2d{
 				int fs = filling.size();
 				
 				for(int j = 0; j< fs; j++){
-					if(master_grid.getCost(filling[j].x, filling[j].y) == cost)
+					if(master_grid.getCost(filling[j].x, filling[j].y) < LETHAL_OBSTACLE)
 						master_grid.setCost(filling[j].x, filling[j].y, 0);
 				}
 			}
-		
+			
 			int numOfTracks = rt.size();
-		
-			if(rolling_window_) master_grid.updateOrigin(  robotx - master_grid.getSizeInMetersX() / 2 ,  roboty - master_grid.getSizeInMetersY() / 2);
+			//std::cout << "control 1 " << std::endl;
 		
 			for(int i = 0; i <numOfTracks; i++){
-		
+				//std::cout << "control 2 " << std::endl;
 				std::vector<MapLocation> filling;
 				master_grid.convexFillCells(rt[i], filling);
-				int fs = filling.size();
-			
+				sortCells(filling, rt[i][0], rt[i][1]);
+				int fs = filling.size(), c = 0;
+				cost = 240;
+				int q = fs / 200;
+				
 				for(int j = 0; j< fs; j++){
-					if(master_grid.getCost(filling[j].x, filling[j].y) == 0)
+				
+					if(master_grid.getCost(filling[j].x, filling[j].y) == LETHAL_OBSTACLE) break;
 						master_grid.setCost(filling[j].x, filling[j].y, cost);
+					if(++c > q){
+						c = 0;
+						cost --;
+					}
+						
 				}
 			}
 
@@ -251,11 +292,9 @@ namespace costmap_2d{
 			int numOfOtherRobots = polys.size();
 			int prev = polysPrev.size();
 
-			if(rolling_window_) master_grid.updateOrigin(  robotx - master_grid.getSizeInMetersX() / 2 ,  roboty - master_grid.getSizeInMetersY() / 2);
-		
+
 			for(int i = 0; i <numOfOtherRobots; i++){
-				if(prev > i && polysPrev[i].size() > 0 && polys[i][0].x == polysPrev[i][0].x) continue;
-				
+			//	if(prev > i && polysPrev[i].size() > 0 && polys[i][0].x == polysPrev[i][0].x) continue;
 				if(rolling_window_)
 					master_grid.setConvexPolygonCost(updatePoints(master_grid, polys[i]), LETHAL_OBSTACLE);
 				else
