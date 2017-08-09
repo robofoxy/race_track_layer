@@ -56,6 +56,12 @@ c.y = mid.y + sin(angle) * speed * speed * 5;
 
 * The robot can make plans passing through other robot's race tracks. However, costs will be bigger near the robot because of the triangular structure of the race tracks.
 
+## Screenshots
+
+Attention! Links may contain multiple images.
 
 * http://imgur.com/a/OZkh0
+
+* http://imgur.com/a/E8Mf7
+
 

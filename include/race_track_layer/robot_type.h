@@ -12,7 +12,8 @@ class RobotType {
 		std::string getName() const;
 		double getYaw() const;
 		double getSpeed() const;
-		geometry_msgs::Point getMidPoint()const;
+		geometry_msgs::Point getMidPoint();
+		double getMaxWeight() const;
 		
 	private:
 		std::string name;
@@ -20,9 +21,11 @@ class RobotType {
 		ros::Subscriber sub, sub_yaw, sub_speed;
 		geometry_msgs::PolygonStamped footprint;
 		float x, y, z, w;
+		double weight;
 		double angle, speed;
 		void setSpeed(const geometry_msgs::Twist::ConstPtr& msg);
 		void setYaw(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg);
+		void setMaxWeight();
 };
 
 
@@ -60,20 +63,17 @@ void RobotType::setSpeed(const geometry_msgs::Twist::ConstPtr& msg){
 
 void RobotType::setYaw(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg){
 		
-	if (abs(x - msg->pose.pose.orientation.x) < 0.01 && abs(y - msg->pose.pose.orientation.y) < 0.01 && abs(z - msg->pose.pose.orientation.z) < 0.01 && abs(w - msg->pose.pose.orientation.w) < 0.01)
-		return;
-	else{
-		x = msg->pose.pose.orientation.x;
-		y = msg->pose.pose.orientation.y;
-		z = msg->pose.pose.orientation.z;
-		w = msg->pose.pose.orientation.w;
-	}
+	x = msg->pose.pose.orientation.x;
+	y = msg->pose.pose.orientation.y;
+	z = msg->pose.pose.orientation.z;
+	w = msg->pose.pose.orientation.w;
 	
 	tf::Quaternion q(x, y, z, w);
 	tf::Matrix3x3 m(q);
 	double roll, pitch, yaw;
 	m.getRPY(roll, pitch, yaw);
 	angle = yaw;
+	//std::cout << "YAW IS SET TO " << angle << std::endl;
 }
 
 double RobotType::getYaw() const{
@@ -84,7 +84,7 @@ double RobotType::getSpeed() const{
 	return speed;
 }
 
-geometry_msgs::Point RobotType::getMidPoint() const{
+geometry_msgs::Point RobotType::getMidPoint() {
 	int size = footprint.polygon.points.size();
 	geometry_msgs::Point mid;
 	float x, y;
@@ -97,8 +97,37 @@ geometry_msgs::Point RobotType::getMidPoint() const{
 	mid.x = x / size;
 	mid.y = y / size;
 	
+	setMaxWeight();
+	
 	return mid;
 }
+
+
+void RobotType::setMaxWeight(){
+	int size = footprint.polygon.points.size();
+	float max = -1;
+	
+	for(int i = 0; i < size; i++){
+		float tempX = footprint.polygon.points[i].x;
+		float tempY = footprint.polygon.points[i].y;
+		 
+		for(int j = i+1; j < size; j++){
+			float temp2X = footprint.polygon.points[j].x;
+			float temp2Y = footprint.polygon.points[j].y;
+			
+			float res = sqrt(pow(tempX - temp2X, 2) + pow(tempY - temp2Y, 2));
+			if(res > max) max = res; 
+		}
+	}
+	
+	weight = max;
+}
+
+
+double RobotType::getMaxWeight() const{
+	return weight;
+}
+
 
 
 #endif
