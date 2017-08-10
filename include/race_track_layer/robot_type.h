@@ -13,7 +13,6 @@ class RobotType {
 		double getYaw() const;
 		double getSpeed() const;
 		geometry_msgs::Point getMidPoint();
-		double getMaxWeight() const;
 		
 	private:
 		std::string name;
@@ -21,11 +20,9 @@ class RobotType {
 		ros::Subscriber sub, sub_yaw, sub_speed;
 		geometry_msgs::PolygonStamped footprint;
 		float x, y, z, w;
-		double weight;
 		double angle, speed;
 		void setSpeed(const geometry_msgs::Twist::ConstPtr& msg);
 		void setYaw(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg);
-		void setMaxWeight();
 };
 
 
@@ -96,36 +93,9 @@ geometry_msgs::Point RobotType::getMidPoint() {
 	mid.x = x / size;
 	mid.y = y / size;
 	
-	setMaxWeight();
-	
 	return mid;
 }
 
-
-void RobotType::setMaxWeight(){
-	int size = footprint.polygon.points.size();
-	float max = -1;
-	
-	for(int i = 0; i < size; i++){
-		float tempX = footprint.polygon.points[i].x;
-		float tempY = footprint.polygon.points[i].y;
-		 
-		for(int j = i+1; j < size; j++){
-			float temp2X = footprint.polygon.points[j].x;
-			float temp2Y = footprint.polygon.points[j].y;
-			
-			float res = sqrt(pow(tempX - temp2X, 2) + pow(tempY - temp2Y, 2));
-			if(res > max) max = res; 
-		}
-	}
-	
-	weight = max;
-}
-
-
-double RobotType::getMaxWeight() const{
-	return weight;
-}
 
 
 

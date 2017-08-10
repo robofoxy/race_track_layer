@@ -175,12 +175,7 @@ namespace costmap_2d{
 		int size = filling.size();
 		
 		while(i < size - 1){
-			MapLocation qq, rr;
-			qq.x = 0;
-			qq.y = 0;
-			rr.x = 5;
-			rr.y = 12;
-			
+		
 			if(findDistance(mid, filling[i]) > findDistance(mid, filling[i+1])){
 				temp = filling[i];
 				filling[i] = filling[i+1];
@@ -194,6 +189,7 @@ namespace costmap_2d{
 	
 
 	bool RaceTrackLayer::isInCriticalRegion(costmap_2d::Costmap2D& master_grid, const MapLocation& filling){
+	
 		MapLocation coordMax, coordMin;
 		
 		if(!rolling_window_)
@@ -247,17 +243,17 @@ namespace costmap_2d{
 			
 			}
 			
+			
+			findRaceTracks(master_grid);
 			findPolys();
-		
+			
 			int numOfPrevRobots = polysPrev.size();
 			
-		
 			for(int i = 0; i < numOfPrevRobots; i++){
 				if(polysPrev.size() > i && polysPrev[i].size() > 0 && polys[i][0].x == polysPrev[i][0].x) continue;
 					master_grid.setConvexPolygonCost(polysPrev[i], FREE_SPACE);
 			}
 		
-			findRaceTracks(master_grid);
 		
 			int numOfPrevTracks = rtPrev.size();
 		
