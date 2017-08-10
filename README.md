@@ -71,6 +71,6 @@ Attention! Links may contain multiple images and last link is the most current.
 
 * http://imgur.com/a/OZkh0
 
-* http://imgur.com/a/E8Mf
+* http://imgur.com/a/E8Mf7
 
 * http://imgur.com/a/69WkQ
