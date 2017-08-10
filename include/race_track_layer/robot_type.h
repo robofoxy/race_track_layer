@@ -62,7 +62,6 @@ void RobotType::setSpeed(const geometry_msgs::Twist::ConstPtr& msg){
 }
 
 void RobotType::setYaw(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg){
-		
 	x = msg->pose.pose.orientation.x;
 	y = msg->pose.pose.orientation.y;
 	z = msg->pose.pose.orientation.z;
@@ -72,8 +71,8 @@ void RobotType::setYaw(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr&
 	tf::Matrix3x3 m(q);
 	double roll, pitch, yaw;
 	m.getRPY(roll, pitch, yaw);
+	
 	angle = yaw;
-	//std::cout << "YAW IS SET TO " << angle << std::endl;
 }
 
 double RobotType::getYaw() const{

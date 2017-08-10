@@ -25,18 +25,14 @@ namespace costmap_2d{
 		  bool isDiscretized();
 
 		private:
-	      bool isInCriticalRegion(const MapLocation& filling);
+	      bool isInCriticalRegion(costmap_2d::Costmap2D& master_grid, const MapLocation& filling);
 	      bool weightSet;
 	      float weight;
-		  char cost;
-		  ros::Subscriber sub;
 		  std::string nmspc;
-		  float robotx, roboty, initx, inity;
+		  double robotx, roboty;
+		  unsigned int robox, roboy;
 		  bool robotsSet, initSet, is;
-		  RobotType* robot;
-		  std::vector<geometry_msgs::Point> updatePoints(costmap_2d::Costmap2D&, const std::vector<geometry_msgs::Point> &);
-		  void initSub(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg);
-		   
+		  std::vector<RobotType*> robots;
 		  std::vector<std::vector<geometry_msgs::Point> > polys, polysPrev;
 		  std::vector<std::vector<MapLocation> > rt, rtPrev;
 		  bool rolling_window_;
