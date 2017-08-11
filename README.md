@@ -23,27 +23,27 @@ to array of plugins of local costmap and global costmap just below the *obstacle
 
 * *race\_track\_layer* clears old footprint locations and creates obstacles new footprint areas.
 
-* *race\_track\_layer* detects other robot's speeds and directions, then sets inflation cost between 240 and 40 to their race tracks.
+* *race\_track\_layer* detects other robot's speeds and directions, then sets inflation cost between 253 and 40 to their race tracks.
 
 * Race tracks are triangles that start from in the line of frontmost edge of footprints of robots.
 
 * Length of a race track depends on velocity(speed and direction) of robot. If speed is under 1 m/s, x and y coordinates of pioneer edge of the triangle will be:
 ```
-c.x = mid.x + cos(angle) * 3;
-c.y = mid.y + sin(angle) * 3;
+c.x = mid.x + cos(angle) * 10;
+c.y = mid.y + sin(angle) * 10;
 ```
 Else:
 ```
-c.x = mid.x + cos(angle) * speed * 3;
-c.y = mid.y + sin(angle) * speed * 3;
+c.x = mid.x + cos(angle) * speed * 10;
+c.y = mid.y + sin(angle) * speed * 10;
 ```
 
 
-* Width of race tracks is equal to lenght of vertical projection of footprint polygons of robots.
+* Width of race tracks is equal to length of vertical projection of footprint polygons of robots.
 
 * After position of race track triangle is changed, *race\_track\_layer* clears cells whose costs are under LETHAL_OBSTACLE. Therefore, *race\_track\_layer* does not damage effects of other layers.
 
-* In order to prevent from planner failure, race track triangle is filled with cost of 240 to 40.
+* In order to prevent from planner failure, race track triangle is filled with cost of 253 to 40.
 
 | Range        | Collision Status   |
 | ------------- | ------------- |
@@ -65,9 +65,9 @@ c.y = mid.y + sin(angle) * speed * 3;
 
 * Costmap cells are sorted with *bubble sort* algorithm with respect to their distances between midpoint of the footprint of the host.
 
-* Costs of sorted costmap cells are decreased from 240 to 40 in order.
+* Costs of sorted costmap cells decrease from 253 to 40 in order after 5/8 of the cells are filled with *inscribed cost*(253).
 
-## Screenshots
+## Screenshots (evolution of the code)
 
 Attention! Links may contain multiple images and last link is the most current.
 
@@ -78,3 +78,5 @@ Attention! Links may contain multiple images and last link is the most current.
 * http://imgur.com/a/69WkQ
 
 * http://imgur.com/a/MKntZ
+
+* http://imgur.com/a/yxSNE

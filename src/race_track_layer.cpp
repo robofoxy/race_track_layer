@@ -149,12 +149,12 @@ namespace costmap_2d{
 			b.y = mid.y + sin(angle - 0.5 * M_PI) * max_right;
 			
 			if(speed >= 1){
-				c.x = mid.x + cos(angle) * speed * 3;
-				c.y = mid.y + sin(angle) * speed * 3;
+				c.x = mid.x + cos(angle) * speed * 10;
+				c.y = mid.y + sin(angle) * speed * 10;
 			}
 			else{
-				c.x = mid.x + cos(angle) * 3 ;
-				c.y = mid.y + sin(angle) * 3 ;
+				c.x = mid.x + cos(angle) * 10;
+				c.y = mid.y + sin(angle) * 10;
 			}
 			
 			master_grid.worldToMap (a.x, a.y, q.x, q.y);
@@ -229,7 +229,7 @@ namespace costmap_2d{
 		if(!rolling_window_)
 			master_grid.mapToWorld(robox, roboy, robotx, roboty);
 		
-		float dist = (weight / 2 + 0.5);
+		float dist = (weight / 2);
 		
 		master_grid.worldToMap(robotx - dist, roboty - dist, coordMin.x, coordMin.y);
 		master_grid.worldToMap(robotx + dist, roboty + dist, coordMax.x, coordMax.y);
@@ -312,8 +312,8 @@ namespace costmap_2d{
 				master_grid.convexFillCells(rt[i], filling);
 				sortCells(filling, rt[i][0], rt[i][1]);
 				int fs = filling.size(), c = 0;
-				char cost = 240;
-				int q = fs / 200;
+				char cost = 253;
+				int q = fs / 568;
 				
 				for(int j = 0; j< fs; j++){
 					if(isInCriticalRegion(master_grid, filling[j]))
@@ -323,7 +323,7 @@ namespace costmap_2d{
 					
 					master_grid.setCost(filling[j].x, filling[j].y, cost);
 					
-					if(++c > q){
+					if(j > fs * 5 / 8 && ++c > q){
 						c = 0;
 						cost --;
 					}
