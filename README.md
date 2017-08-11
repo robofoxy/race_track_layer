@@ -25,19 +25,21 @@ to array of plugins of local costmap and global costmap just below the *obstacle
 
 * *race\_track\_layer* detects other robot's speeds and directions, then sets inflation cost between 240 and 40 to their race tracks.
 
-* Race tracks are triangles that start from midpoints of footprints of robots.
+* Race tracks are triangles that start from in the line of frontmost edge of footprints of robots.
 
 * Length of a race track depends on velocity(speed and direction) of robot. If speed is under 1 m/s, x and y coordinates of pioneer edge of the triangle will be:
 ```
-c.x = mid.x + cos(angle) * 5 ;
-c.y = mid.y + sin(angle) * 5 ;
+c.x = mid.x + cos(angle) * 3;
+c.y = mid.y + sin(angle) * 3;
 ```
 Else:
 ```
-c.x = mid.x + cos(angle) * speed * speed * 5;
-c.y = mid.y + sin(angle) * speed * speed * 5;
+c.x = mid.x + cos(angle) * speed * 3;
+c.y = mid.y + sin(angle) * speed * 3;
 ```
 
+
+* Width of race tracks is equal to lenght of vertical projection of footprint polygons of robots.
 
 * After position of race track triangle is changed, *race\_track\_layer* clears cells whose costs are under LETHAL_OBSTACLE. Therefore, *race\_track\_layer* does not damage effects of other layers.
 
@@ -74,3 +76,5 @@ Attention! Links may contain multiple images and last link is the most current.
 * http://imgur.com/a/E8Mf7
 
 * http://imgur.com/a/69WkQ
+
+* http://imgur.com/a/MKntZ

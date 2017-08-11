@@ -97,30 +97,64 @@ namespace costmap_2d{
 		rt.clear();
 		int size = robots.size();
 		
-		for(int i = 0; i < size; i++){
+		for(int i = 0; i < size && robots[i]->isFootprintArrived(); i++){
 			double angle = robots[i]->getYaw();
 			double speed = robots[i]->getSpeed();
 			geometry_msgs::Point mid = robots[i]->getMidPoint();
 			
 			if(speed < 0.01) continue;
 			
+			geometry_msgs::PolygonStamped fp = robots[i]->getFootprint();
+			int sz = fp.polygon.points.size();
+			double maxproj = -1;
+			double max_left = -1;
+			double max_right = -1;
+			
+			for(int  j = 0; j < sz; j++){
+				double hipotenus = sqrt(pow(fp.polygon.points[j].x - mid.x, 2) + pow(fp.polygon.points[j].y - mid.y, 2));
+				double alpha = atan2(fp.polygon.points[j].y - mid.y, fp.polygon.points[j].x - mid.x);
+				double projection = hipotenus * cos(alpha - (angle + M_PI * 0.5));
+				
+				if(max_left < projection) max_left = projection;
+			}
+			
+			for(int  j = 0; j < sz; j++){
+				double hipotenus = sqrt(pow(fp.polygon.points[j].x - mid.x, 2) + pow(fp.polygon.points[j].y - mid.y, 2));
+				double alpha = atan2(fp.polygon.points[j].y - mid.y, fp.polygon.points[j].x - mid.x);
+				double projection = hipotenus * cos(alpha - (angle - M_PI * 0.5));
+				
+				if(max_right < projection) max_right = projection;
+			}
+			
+			for(int  j = 0; j < sz; j++){
+				double hipotenus = sqrt(pow(fp.polygon.points[j].x - mid.x, 2) + pow(fp.polygon.points[j].y - mid.y, 2));
+				double alpha = atan2(fp.polygon.points[j].y - mid.y, fp.polygon.points[j].x - mid.x);
+				double projection = hipotenus * cos(alpha - angle);
+				
+				if(maxproj < projection) maxproj = projection;
+			}
+
+			
+			mid.x = mid.x + maxproj * cos(angle) ;
+			mid.y = mid.y + maxproj * sin(angle) ;
+			
 			std::vector<MapLocation> raceTrack;
 			geometry_msgs::Point a, b, c;
 			MapLocation q, p, r;
 			
-			a.x = mid.x + cos(angle + 0.5) ;
-			a.y = mid.y + sin(angle + 0.5) ;
+			a.x = mid.x + cos(angle + 0.5 * M_PI) * max_left;
+			a.y = mid.y + sin(angle + 0.5 * M_PI) * max_left;
 			
-			b.x = mid.x + cos(angle - 0.5) ;
-			b.y = mid.y + sin(angle - 0.5) ;
+			b.x = mid.x + cos(angle - 0.5 * M_PI) * max_right;
+			b.y = mid.y + sin(angle - 0.5 * M_PI) * max_right;
 			
 			if(speed >= 1){
-				c.x = mid.x + cos(angle) * speed * speed * 5;
-				c.y = mid.y + sin(angle) * speed * speed * 5;
+				c.x = mid.x + cos(angle) * speed * 3;
+				c.y = mid.y + sin(angle) * speed * 3;
 			}
 			else{
-				c.x = mid.x + cos(angle) * 5 ;
-				c.y = mid.y + sin(angle) * 5 ;
+				c.x = mid.x + cos(angle) * 3 ;
+				c.y = mid.y + sin(angle) * 3 ;
 			}
 			
 			master_grid.worldToMap (a.x, a.y, q.x, q.y);
@@ -136,20 +170,20 @@ namespace costmap_2d{
 	}
 	
 	
-	void RaceTrackLayer::findPolys(){
+	void RaceTrackLayer::findPolys(const costmap_2d::Costmap2D& master_grid){
 	
 		if(!robotsSet) return;
 		polys.clear();	
 		int size = robots.size();
 		
-		for(int i = 0; i < size; i++){
+		for(int i = 0; i < size && robots[i]->isFootprintArrived() ; i++){
 			int numOfPoints = robots[i]->getFootprint().polygon.points.size();
-			std::vector<geometry_msgs::Point> poly;
+			std::vector<MapLocation> poly;
 			for(int j = 0; j < numOfPoints; j++){
-				geometry_msgs::Point p;
+				MapLocation p;
 				
-				p.x = robots[i]->getFootprint().polygon.points[j].x;
-				p.y = robots[i]->getFootprint().polygon.points[j].y;
+				master_grid.worldToMap(robots[i]->getFootprint().polygon.points[j].x, robots[i]->getFootprint().polygon.points[j].y, p.x, p.y);
+				
 			
 				poly.push_back(p);
 			}
@@ -243,15 +277,19 @@ namespace costmap_2d{
 			
 			}
 			
-			
 			findRaceTracks(master_grid);
-			findPolys();
+			findPolys(master_grid);
 			
 			int numOfPrevRobots = polysPrev.size();
 			
 			for(int i = 0; i < numOfPrevRobots; i++){
-				if(polysPrev.size() > i && polysPrev[i].size() > 0 && polys[i][0].x == polysPrev[i][0].x) continue;
-					master_grid.setConvexPolygonCost(polysPrev[i], FREE_SPACE);
+				std::vector<MapLocation> filling;
+				master_grid.convexFillCells(polysPrev[i], filling);
+				int fs = filling.size();
+				
+				for(int j = 0; j < fs; j++){
+					master_grid.setCost(filling[j].x, filling[j].y, FREE_SPACE);
+				}
 			}
 		
 		
@@ -298,9 +336,15 @@ namespace costmap_2d{
 			int numOfOtherRobots = polys.size();
 			int prev = polysPrev.size();
 
-			for(int i = 0; i <numOfOtherRobots; i++)
-				master_grid.setConvexPolygonCost(polys[i], LETHAL_OBSTACLE);
-					
+			for(int i = 0; i < numOfOtherRobots; i++){
+				std::vector<MapLocation> filling;
+				master_grid.convexFillCells(polys[i], filling);
+				int fs = filling.size();
+				
+				for(int j = 0; j < fs; j++){
+					master_grid.setCost(filling[j].x, filling[j].y, LETHAL_OBSTACLE);
+				}
+			}
 			polysPrev = polys;
 		}
 	

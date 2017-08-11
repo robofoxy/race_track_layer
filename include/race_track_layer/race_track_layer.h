@@ -33,10 +33,10 @@ namespace costmap_2d{
 		  unsigned int robox, roboy;
 		  bool robotsSet, initSet, is;
 		  std::vector<RobotType*> robots;
-		  std::vector<std::vector<geometry_msgs::Point> > polys, polysPrev;
+		  std::vector<std::vector<MapLocation> > polys, polysPrev;
 		  std::vector<std::vector<MapLocation> > rt, rtPrev;
 		  bool rolling_window_;
-		  void findPolys();
+		  void findPolys(const costmap_2d::Costmap2D& master_grid);
 		  void findRaceTracks(const costmap_2d::Costmap2D&);
 		  void reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t level);
 		  dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig> *dsrv_;

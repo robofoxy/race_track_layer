@@ -13,12 +13,14 @@ class RobotType {
 		double getYaw() const;
 		double getSpeed() const;
 		geometry_msgs::Point getMidPoint();
+		bool isFootprintArrived() const;
 		
 	private:
 		std::string name;
 		ros::NodeHandle n;
 		ros::Subscriber sub, sub_yaw, sub_speed;
 		geometry_msgs::PolygonStamped footprint;
+		bool fpArrived;
 		float x, y, z, w;
 		double angle, speed;
 		void setSpeed(const geometry_msgs::Twist::ConstPtr& msg);
@@ -28,6 +30,7 @@ class RobotType {
 
 
 RobotType::RobotType(std::string nm){
+	fpArrived = false;
 	speed = 0;
 	angle = 0;
 	x = 0;
@@ -43,7 +46,8 @@ RobotType::RobotType(std::string nm){
 }
 
 void RobotType::footprint_collector(const geometry_msgs::PolygonStamped::ConstPtr& msg){
-	footprint = *msg;
+		footprint = *msg;
+		fpArrived = true;
 }
 
 geometry_msgs::PolygonStamped RobotType::getFootprint() const{
@@ -83,7 +87,7 @@ double RobotType::getSpeed() const{
 geometry_msgs::Point RobotType::getMidPoint() {
 	int size = footprint.polygon.points.size();
 	geometry_msgs::Point mid;
-	float x, y;
+	float x = 0, y = 0;
 	
 	for(int i = 0; i < size; i++){
 		x += footprint.polygon.points[i].x;
@@ -97,6 +101,9 @@ geometry_msgs::Point RobotType::getMidPoint() {
 }
 
 
+bool RobotType::isFootprintArrived() const{
+	return fpArrived;
+}
 
 
 #endif
